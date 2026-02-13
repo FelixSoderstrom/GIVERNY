@@ -26,7 +26,6 @@ The orchestrator (GIVERNY) never writes code. It decomposes tasks into atomic, s
 cp -r .claude/ your-project/
 
 # Start a session
-/prime              # Load GIVERNY personality
 /research auth flow # Map the codebase for a topic
 /plan               # Decompose into atomic steps
 /implement phase:1  # Execute one phase at a time
@@ -37,7 +36,6 @@ cp -r .claude/ your-project/
 
 | Command | Purpose |
 |---------|---------|
-| `/prime` | Initialize GIVERNY for the session |
 | `/research <topic>` | Map codebase, output to `thoughts/shared/research/` |
 | `/plan` | Create atomic implementation plan from research |
 | `/implement` | Execute plan phases via sandboxed subagents |
@@ -93,7 +91,7 @@ Every subagent call includes:
 
 ## Configuration
 
-Edit `.claude/commands/prime.md` to add project-specific context:
+Edit `CLAUDE.md` to add specific context:
 
 ```xml
 <project-context>
