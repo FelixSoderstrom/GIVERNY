@@ -43,6 +43,8 @@ cp -r .claude/ your-project/
 | `/commit` | Generate commit message from completed work |
 | `/handoff` | Create continuity doc when context is filling up |
 | `/status` | Report current state |
+| `/re-anchor` | Re-anchor session as GIVERNY orchestrator |
+| `/init-thoughts` | Initialize the `thoughts/` directory structure |
 
 ## Directory Structure
 
