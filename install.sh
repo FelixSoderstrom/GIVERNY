@@ -13,14 +13,16 @@ echo
 echo "Install GIVERNY for:"
 echo "  1) Claude Code"
 echo "  2) GitHub Copilot"
-echo "  3) Both"
+echo "  3) Cursor"
+echo "  4) All"
 echo
-read -p "Select [1-3]: " target_choice
+read -p "Select [1-4]: " target_choice
 
 case $target_choice in
     1) TARGET="claude" ;;
     2) TARGET="copilot" ;;
-    3) TARGET="both" ;;
+    3) TARGET="cursor" ;;
+    4) TARGET="all" ;;
     *) echo "Invalid selection"; exit 1 ;;
 esac
 
@@ -211,6 +213,78 @@ install_azure_devops_claude_repo() {
     echo "Run: az login && az devops configure --defaults organization=YOUR_ORG project=YOUR_PROJECT"
 }
 
+install_cursor_global() {
+    echo "Installing Cursor (global)..."
+
+    mkdir -p ~/.cursor/agents
+    mkdir -p ~/.cursor/skills
+
+    # Copy agents
+    cp -v "$SCRIPT_DIR/.cursor/agents/"*.md ~/.cursor/agents/
+
+    # Copy skills (recursive for skill directories)
+    cp -rv "$SCRIPT_DIR/.cursor/skills/"* ~/.cursor/skills/
+
+    echo
+    echo "Note: Global rules must be configured via Cursor Settings UI."
+    echo "Copy the contents of .cursor/rules/giverny.mdc into your Cursor rules."
+    echo
+}
+
+install_cursor_repo() {
+    echo "Installing Cursor (repo-specific)..."
+
+    local dest="${PWD}"
+
+    if [[ "$dest" == "$SCRIPT_DIR" ]]; then
+        echo "Error: Cannot install to GIVERNY source directory."
+        echo "Run this script from your target project directory."
+        exit 1
+    fi
+
+    mkdir -p "$dest/.cursor/agents"
+    mkdir -p "$dest/.cursor/skills"
+    mkdir -p "$dest/.cursor/rules"
+
+    # Copy agents
+    cp -v "$SCRIPT_DIR/.cursor/agents/"*.md "$dest/.cursor/agents/"
+
+    # Copy skills (recursive for skill directories)
+    cp -rv "$SCRIPT_DIR/.cursor/skills/"* "$dest/.cursor/skills/"
+
+    # Copy rules
+    cp -v "$SCRIPT_DIR/.cursor/rules/"*.mdc "$dest/.cursor/rules/"
+
+    # Create thoughts directory structure
+    mkdir -p "$dest/thoughts/shared/research"
+    mkdir -p "$dest/thoughts/shared/plans"
+    mkdir -p "$dest/thoughts/shared/prs"
+    mkdir -p "$dest/thoughts/personal/tickets"
+    mkdir -p "$dest/thoughts/personal/notes"
+
+    echo "Created thoughts/ directory structure"
+}
+
+install_azure_devops_cursor_repo() {
+    echo "Installing Azure DevOps skills for Cursor (repo-specific)..."
+
+    local dest="${PWD}"
+
+    mkdir -p "$dest/scripts/agent"
+
+    # Copy Azure DevOps scripts
+    cp -rv "$SCRIPT_DIR/git-skills/azure-devops/scripts/"* "$dest/scripts/agent/"
+
+    # Make scripts executable
+    find "$dest/scripts/agent" -name "*.sh" -exec chmod +x {} \;
+
+    echo
+    echo "Note: Azure DevOps Cursor skills not yet available."
+    echo "Scripts installed to scripts/agent/ for manual use."
+    echo "Prerequisites: az cli, jq"
+    echo "Run: az login && az devops configure --defaults organization=YOUR_ORG project=YOUR_PROJECT"
+}
+
 install_azure_devops_copilot_repo() {
     echo "Installing Azure DevOps skills for Copilot (repo-specific)..."
 
@@ -250,12 +324,20 @@ apply_git_skills() {
                         echo "Azure DevOps + Copilot global not supported."
                     fi
                     ;;
-                "both")
+                "cursor")
+                    if [[ "$SCOPE" == "repo" ]]; then
+                        install_azure_devops_cursor_repo
+                    else
+                        echo "Azure DevOps + Cursor global not supported."
+                    fi
+                    ;;
+                "all")
                     if [[ "$SCOPE" == "global" ]]; then
                         install_azure_devops_claude_global
                     else
                         install_azure_devops_claude_repo
                         install_azure_devops_copilot_repo
+                        install_azure_devops_cursor_repo
                     fi
                     ;;
             esac
@@ -282,13 +364,22 @@ case $TARGET in
             install_copilot_repo
         fi
         ;;
-    "both")
+    "cursor")
+        if [[ "$SCOPE" == "global" ]]; then
+            install_cursor_global
+        else
+            install_cursor_repo
+        fi
+        ;;
+    "all")
         if [[ "$SCOPE" == "global" ]]; then
             install_claude_global
             install_copilot_global
+            install_cursor_global
         else
             install_claude_repo
             install_copilot_repo
+            install_cursor_repo
         fi
         ;;
 esac
@@ -301,8 +392,8 @@ echo "         Installation Complete"
 echo "========================================"
 echo
 echo "Next steps:"
-echo "  1. Edit CLAUDE.md (or copilot-instructions.md) to add project context"
-echo "  2. Run /re-anchor to initialize GIVERNY in your session"
+echo "  1. Edit CLAUDE.md (or copilot-instructions.md / .cursor/rules/) to add project context"
+echo "  2. Run /re-anchor to initialize GIVERNY in your session (Claude Code, Copilot, or Cursor)"
 echo "  3. Use /research <topic> to start mapping your codebase"
 echo
 
