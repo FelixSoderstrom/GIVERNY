@@ -1,6 +1,6 @@
 # GIVERNY
 
-An orchestration layer for Claude Code that prevents context blowout on complex tasks.
+An orchestration layer for AI coding assistants that prevents context blowout on complex tasks. Supports **Claude Code**, **GitHub Copilot**, and **Cursor**.
 
 ## The Problem
 
@@ -19,13 +19,44 @@ GIVERNY enforces a phased workflow where each phase produces artifacts that the 
 
 The orchestrator (GIVERNY) never writes code. It decomposes tasks into atomic, sandboxed subagent calls with explicit file boundaries. Subagents do the work. Orchestrator verifies and routes.
 
+## Installation
+
+Run the interactive installer from your target project directory:
+
+```bash
+# Clone GIVERNY
+git clone https://github.com/Wrong-o/GIVERNY.git
+
+# Run installer from your project
+cd your-project/
+bash /path/to/GIVERNY/install.sh
+```
+
+The installer will prompt you for:
+
+1. **Target** — Claude Code, GitHub Copilot, Cursor, or All
+2. **Scope** — Global (all projects) or repo-specific (current directory)
+3. **Git skills** — Azure DevOps, GitHub, or None
+
+### What gets installed
+
+| Target | Agents | Skills/Commands | Instructions |
+|--------|--------|-----------------|--------------|
+| Claude Code | `.claude/agents/` | `.claude/commands/` | `CLAUDE.md` |
+| GitHub Copilot | `.github/agents/` | `.github/skills/` | `.github/copilot-instructions.md` |
+| Cursor | `.cursor/agents/` | `.cursor/skills/` | `.cursor/rules/giverny.mdc` |
+
+All targets also create the `thoughts/` directory structure.
+
+### Global vs repo-specific
+
+- **Repo-specific** installs everything into the current directory — agents, skills, instructions, and thoughts/
+- **Global** installs agents and skills to `~/.<tool>/` so they're available across all projects. Instructions must be added per-project (or via Cursor Settings UI for Cursor)
+
 ## Quick Start
 
 ```bash
-# Copy .claude/ to your project root
-cp -r .claude/ your-project/
-
-# Start a session
+# After installation, start a session
 /research auth flow # Map the codebase for a topic
 /plan               # Decompose into atomic steps
 /implement phase:1  # Execute one phase at a time
@@ -43,6 +74,8 @@ cp -r .claude/ your-project/
 | `/commit` | Generate commit message from completed work |
 | `/handoff` | Create continuity doc when context is filling up |
 | `/status` | Report current state |
+| `/re-anchor` | Re-anchor session as GIVERNY orchestrator |
+| `/init-thoughts` | Initialize the `thoughts/` directory structure |
 
 ## Directory Structure
 
@@ -86,8 +119,8 @@ Every subagent call includes:
 
 ## Requirements
 
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
-- A `thoughts/` directory (create manually or let commands create it)
+- One or more of: [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [GitHub Copilot](https://github.com/features/copilot), or [Cursor](https://cursor.com)
+- A `thoughts/` directory (the installer creates this for you)
 
 ## Configuration
 
